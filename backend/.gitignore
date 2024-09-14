@@ -1,0 +1,32 @@
+# Зависимости
+/node_modules
+
+# Скомпилированные файлы
+/dist
+
+# Файлы среды выполнения
+.env
+
+# Логи
+*.log
+
+# Временные файлы операционной системы
+.DS_Store
+Thumbs.db
+
+# Файлы IDE и редакторов
+/.idea
+/.vscode
+*.swp
+*.swo
+
+# Файлы npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Файлы TypeScript
+*.tsbuildinfo
+
+# Резервные копии
+*.bak
