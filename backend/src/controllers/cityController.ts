@@ -42,7 +42,7 @@ export const deleteCity = async (req: Request, res: Response) => {
     if (!deletedCity) {
       return res.status(404).json({ message: 'City not found' });
     }
-    res.json({ message: 'City deleted successfully' });
+    res.json({ id });
   } catch (error) {
     res.status(400).json({ message: 'Error deleting city', error });
   }
