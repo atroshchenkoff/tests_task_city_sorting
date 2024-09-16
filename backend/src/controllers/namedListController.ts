@@ -12,8 +12,8 @@ export const getNamedLists = async (req: Request, res: Response) => {
 
 export const createNamedList = async (req: Request, res: Response) => {
   try {
-    const { name, cities, color } = req.body;
-    const newNamedList = new NamedList({ name, cities, color });
+    const { name, shortName, cities, color } = req.body;
+    const newNamedList = new NamedList({ name, shortName, cities, color });
     const savedNamedList = await newNamedList.save();
     res.status(201).json(savedNamedList);
   } catch (error) {
@@ -24,8 +24,8 @@ export const createNamedList = async (req: Request, res: Response) => {
 export const updateNamedList = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, cities, color } = req.body;
-    const updatedNamedList = await NamedList.findByIdAndUpdate(id, { name, cities, color }, { new: true });
+    const { name, shortName, cities, color } = req.body;
+    const updatedNamedList = await NamedList.findByIdAndUpdate(id, { name, shortName, cities, color }, { new: true });
     if (!updatedNamedList) {
       return res.status(404).json({ message: 'Named list not found' });
     }
@@ -42,7 +42,7 @@ export const deleteNamedList = async (req: Request, res: Response) => {
     if (!deletedNamedList) {
       return res.status(404).json({ message: 'Named list not found' });
     }
-    res.json({ message: 'Named list deleted successfully' });
+    res.json({ id });
   } catch (error) {
     res.status(400).json({ message: 'Error deleting named list', error });
   }
