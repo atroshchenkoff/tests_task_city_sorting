@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import City from '../src/models/City';
+import City from '../models/City';
 import cities from './ru_cities.json';
 
 dotenv.config();

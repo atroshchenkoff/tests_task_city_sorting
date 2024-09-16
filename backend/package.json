@@ -8,7 +8,7 @@
     "dev": "nodemon src/app.ts",
     "build": "tsc -p .",
     "postinstall": "npm run build",
-    "seed-cities": "ts-node scripts/importCities.ts"
+    "seed-cities": "ts-node src/scripts/importCities.ts"
   },
   "engines": {
     "node": "20.x"
