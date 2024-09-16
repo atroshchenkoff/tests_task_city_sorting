@@ -60,6 +60,7 @@ const CityTable: FC<{
     const [editingKey, setEditingKey] = useState('');
     const [disabled, setDisabled] = useState(false);
     const [creatingMode, setCreatingMode] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
     useEffect(() => {
       setData(cities);
@@ -120,6 +121,9 @@ const CityTable: FC<{
     };
 
     const handleAdd = () => {
+      const lastPage = Math.ceil((data.length + 1) / 10);
+      setCurrentPage(lastPage);
+
       const newData: City = {
         _id: 'newRow',
         name: '',
@@ -218,13 +222,18 @@ const CityTable: FC<{
             columns={mergedColumns}
             rowClassName="editable-row"
             pagination={{
-              onChange: cancelEditing,
+              current: currentPage,
+              onChange: (page) => {
+                setCurrentPage(page);
+                return creatingMode
+                  ? cancelAdding()
+                  : cancelEditing()
+              },
             }}
             rowKey={(record) => record._id}
           />
         </Form>
       </>
-
     );
   };
 
