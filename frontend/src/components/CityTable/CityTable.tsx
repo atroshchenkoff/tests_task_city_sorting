@@ -49,9 +49,11 @@ const EditableCell: FC<PropsWithChildren<EditableCellProps>> = ({
 };
 
 const CityTable: FC<{
+  isLoadingCityList: boolean,
   cities: City[],
   sendToCitiesMachine: SendToCitiesMachineType
 }> = ({
+  isLoadingCityList,
   cities,
   sendToCitiesMachine
 }) => {
@@ -231,6 +233,7 @@ const CityTable: FC<{
               },
             }}
             rowKey={(record) => record._id}
+            loading={isLoadingCityList}
           />
         </Form>
       </>

@@ -7,13 +7,20 @@ const CityListPage = () => {
   const [citiesMachine, sendToCitiesMachine] = useMachine(citiesMachineDefinition);
 
   const { cities } = citiesMachine.context;
-  console.log(cities);
+
+  const isLoadingCityList = citiesMachine.matches('loading');
 
   useEffect(() => {
     sendToCitiesMachine({ type: 'FETCH' });
   }, []);
 
-  return <CityTable cities={cities} sendToCitiesMachine={sendToCitiesMachine} />
+  return (
+    <CityTable
+      isLoadingCityList={isLoadingCityList}
+      cities={cities}
+      sendToCitiesMachine={sendToCitiesMachine}
+    />
+  )
 }
 
 export default CityListPage

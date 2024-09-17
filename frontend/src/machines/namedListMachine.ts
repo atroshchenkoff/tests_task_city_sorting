@@ -1,63 +1,55 @@
-import { setup, assign } from 'xstate';
+import { setup, assign, fromPromise, ActorRefFrom } from 'xstate';
 import * as api from '../services/api';
+import { City } from './citiesMachine';
 
-interface NamedList {
-  id: string;
+export interface NamedList {
+  _id: string;
   name: string;
   shortName: string;
-  cities: string[]; // array of city IDs
+  color: string;
+  cities: City[];
+}
+
+interface IOption {
+  label: string;
+  value: string;
 }
 
 interface NamedListsContext {
+  cities: City[];
+  formattedCities: IOption[];
   namedLists: NamedList[];
-  error: string | null;
+  error: unknown;
 }
 
 type NamedListsEvent =
   | { type: 'FETCH' }
+  | { type: 'FETCH_CITIES' }
   | { type: 'CREATE'; list: Omit<NamedList, 'id'> }
   | { type: 'UPDATE'; list: NamedList }
   | { type: 'DELETE'; id: string };
 
 export const namedListsMachine = setup({
+  guards: {
+    hasError: ({ context }) => context.error !== null,
+  },
+  actors: {
+    fetchCities: fromPromise(async () => api.getCities().then(response => response.data)),
+    fetchNamedLists: fromPromise(async () => api.getNamedLists().then(response => response.data)),
+    createNamedList: fromPromise(async ({ input }: { input: { list: Omit<NamedList, '_id'> } }) => api.createNamedList(input.list).then(response => response.data)),
+    updateNamedList: fromPromise(async ({ input }: { input: { list: NamedList } }) => api.updateNamedList(input.list._id, input.list).then(response => response.data)),
+    deleteNamedList: fromPromise(async ({ input }: { input: { id: string } }) => api.deleteNamedList(input.id).then(response => response.data)),
+  },
+}).createMachine({
   types: {} as {
     context: NamedListsContext;
     events: NamedListsEvent;
   },
-  actions: {
-    assignNamedLists: assign({
-      namedLists: (_, event) => event.data,
-    }),
-    assignError: assign({
-      error: (_, event) => event.data.message,
-    }),
-    addNamedList: assign({
-      namedLists: (context, event) => [...context.namedLists, event.list as NamedList],
-    }),
-    updateNamedList: assign({
-      namedLists: (context, event) => 
-        context.namedLists.map(list => 
-          list.id === (event.list as NamedList).id ? (event.list as NamedList) : list
-        ),
-    }),
-    deleteNamedList: assign({
-      namedLists: (context, event) => 
-        context.namedLists.filter(list => list.id !== event.id),
-    }),
-  },
-  guards: {
-    hasError: (context) => context.error !== null,
-  },
-  actors: {
-    fetchNamedLists: () => api.getNamedLists().then(response => response.data),
-    createNamedList: (_, event) => api.createNamedList(event.list),
-    updateNamedList: (_, event) => api.updateNamedList(event.list.id, event.list),
-    deleteNamedList: (_, event) => api.deleteNamedList(event.id),
-  },
-}).createMachine({
   id: 'namedLists',
   initial: 'idle',
   context: {
+    cities: [],
+    formattedCities: [],
     namedLists: [],
     error: null,
   },
@@ -67,74 +59,128 @@ export const namedListsMachine = setup({
     },
     loading: {
       invoke: {
+        id: 'fetchNamedLists',
         src: 'fetchNamedLists',
         onDone: {
           target: 'loaded',
-          actions: 'assignNamedLists',
+          actions: assign({
+            namedLists: ({ event }) => event.output,
+          }),
         },
         onError: {
           target: 'failure',
-          actions: 'assignError',
+          actions: assign({
+            error: ({ event }) => event.error,
+          }),
+        },
+      },
+    },
+    loadingCities: {
+      invoke: {
+        id: 'fetchCities',
+        src: 'fetchCities',
+        onDone: {
+          target: 'loaded',
+          actions: assign({
+            cities: ({ event }) => event.output,
+            formattedCities: ({ event }) => event.output.map(city => {
+              return {
+                label: city.name,
+                value: city._id
+              }
+            }),
+          }),
+        },
+        onError: {
+          target: 'failure',
+          actions: assign({
+            error: ({ event }) => event.error,
+          }),
         },
       },
     },
     loaded: {
       on: {
-        CREATE: { 
+        CREATE: {
           target: 'creating',
         },
-        UPDATE: { 
+        UPDATE: {
           target: 'updating',
         },
-        DELETE: { 
+        DELETE: {
           target: 'deleting',
         },
         FETCH: 'loading',
+        FETCH_CITIES: 'loadingCities',
       },
     },
     creating: {
       invoke: {
+        id: 'createNamedList',
         src: 'createNamedList',
+        input: ({ event }) => ({ list: event.list }),
         onDone: {
           target: 'loaded',
-          actions: 'addNamedList',
+          actions: assign({
+            namedLists: ({ context, event }) => [...context.namedLists, event.output as NamedList],
+          }),
         },
         onError: {
           target: 'failure',
-          actions: 'assignError',
+          actions: assign({
+            error: ({ event }) => event.error,
+          }),
         },
       },
     },
     updating: {
       invoke: {
+        id: 'updateNamedList',
         src: 'updateNamedList',
+        input: ({ event }) => ({ list: event.list }),
         onDone: {
           target: 'loaded',
-          actions: 'updateNamedList',
+          actions: assign({
+            namedLists: ({ context, event }) =>
+              context.namedLists.map(list =>
+                list._id === (event.output as NamedList)._id ? (event.output as NamedList) : list
+              ),
+          }),
         },
         onError: {
           target: 'failure',
-          actions: 'assignError',
+          actions: assign({
+            error: ({ event }) => event.error,
+          }),
         },
       },
     },
     deleting: {
       invoke: {
+        id: 'deleteNamedList',
         src: 'deleteNamedList',
+        input: ({ event }) => ({ id: event.id }),
         onDone: {
           target: 'loaded',
-          actions: 'deleteNamedList',
+          actions: assign({
+            namedLists: ({ context, event }) =>
+              context.namedLists.filter(list => list._id !== event.output.id),
+          }),
         },
         onError: {
           target: 'failure',
-          actions: 'assignError',
+          actions: assign({
+            error: ({ event }) => event.error,
+          }),
         },
       },
     },
     failure: {
-      on: { 
+      on: {
         FETCH: 'loading',
       },
     },
   },
 });
+
+export type SendToNamedListsMachineType = ActorRefFrom<typeof namedListsMachine>['send'];

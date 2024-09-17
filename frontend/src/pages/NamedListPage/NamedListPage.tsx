@@ -1,10 +1,29 @@
 import { useMachine } from '@xstate/react';
-import { namedListsMachine } from '../../machines/namedListMachine';
+import { namedListsMachine as namedListsMachineDefinition } from '../../machines/namedListMachine';
+import { useEffect } from 'react';
+import { NamedListTable } from '../../components/NamedListTable/NamedListTable';
 
 const NamedListPage = () => {
-  const [namedListsState, sendToNamedLists] = useMachine(namedListsMachine);
+  const [namedListsMachine, sendToNamedListsMachine] = useMachine(namedListsMachineDefinition);
 
-  return <div>Named List Page</div>
+  const { namedLists, formattedCities } = namedListsMachine.context;
+
+  const isLoadingNamedList = namedListsMachine.matches('loading');
+  const isRemovingNamedList = namedListsMachine.matches('deleting');
+
+  useEffect(() => {
+    sendToNamedListsMachine({ type: 'FETCH' });
+  }, []);
+
+  return (
+    <NamedListTable
+      namedLists={namedLists}
+      isLoadingNamedList={isLoadingNamedList}
+      isRemovingNamedList={isRemovingNamedList}
+      formattedCities={formattedCities}
+      sendToNamedListsMachine={sendToNamedListsMachine}
+    />
+  )
 }
 
 export default NamedListPage

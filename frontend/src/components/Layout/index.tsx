@@ -6,7 +6,6 @@ import {
   GlobalOutlined
 } from '@ant-design/icons'
 import './index.sass'
-// import AppHeader from './Header'
 import AppRoutes from './Routes'
 import FadedTitle from './FadedTitle'
 
@@ -83,21 +82,12 @@ const Dashboard = () => {
       </Sider>
 
       <Layout>
-        {/* <AppHeader
-          sendToAuthMachine={send}
-          sendToAdminMachine={sendToAdminMachine}
-          locations={locations}
-          selectedLocation={selectedLocation}
-          email={email}
-          isOrganizer={isOrganizer}
-          availableVenueTitle={availableVenueTitle}
-        /> */}
         <Content className="contentPadding">
           <Suspense fallback={<ContentFallbackSpinner />}>
             <AppRoutes />
           </Suspense>
         </Content>
-        <Footer className="footer">City Sorter</Footer>
+        <Footer className="footer">Панель управления именованными списками. © 2024</Footer>
       </Layout>
     </Layout>
   )
